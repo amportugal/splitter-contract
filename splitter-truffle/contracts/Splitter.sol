@@ -18,6 +18,8 @@ contract Splitter {
         aliceAddress = aliceAddr;
         bobAddress = bobAddr;
         carolAddress = carolAddr;
+
+        // Balance is already 0 by default
     }
 
     /*function getBalance() public constant returns (uint balance) {
@@ -31,8 +33,8 @@ contract Splitter {
 
         if(msg.sender == aliceAddress) {
             uint halfOfValue = msg.value / 2;
-            bobAddress.send(halfOfValue);
-            carolAddress.send(halfOfValue);
+            if(!bobAddress.send(halfOfValue)) revert();
+            if(!carolAddress.send(halfOfValue)) revert();
         } else {
             balance += msg.value;
             LogContractPay(msg.sender, msg.value);
@@ -40,6 +42,6 @@ contract Splitter {
     }
 
     function isContractAllowedAddrs(address addr) private constant returns (bool) {
-        return  (addr == aliceAddress && addr == bobAddress && addr == carolAddress);
+        return  (addr == aliceAddress || addr == bobAddress || addr == carolAddress);
     }
 }
