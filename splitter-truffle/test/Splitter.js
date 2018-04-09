@@ -23,12 +23,27 @@ contract("Splitter contract", function(accounts) {
 
         return contract.sendTransaction({from: owner, value: aliceWeiPay})
             .then(function(tx) {
+                return contract.withdrawFunds({from: bobAddress});
+            })
+            .then(function(tx) {
                 bobNewBalance = web3.eth.getBalance(bobAddress);
-                carolNewBalance = web3.eth.getBalance(carolAddress);
+
+                var gasUsed = tx.receipt.gasUsed;
+                var gasPrice = web3.eth.getTransaction(tx.tx).gasPrice;
+
+                assert.equal(bobNewBalance.toString(10), bobBalance.plus(aliceWeiPay/2).minus(gasPrice.mul(gasUsed)).toString(10), "Bob's balance is wrong.");
                 
-                assert.equal(bobNewBalance.toString(10), bobBalance.plus(aliceWeiPay/2).toString(10), "Bob's balance is wrong.");
-                assert.equal(carolNewBalance.toString(10), carolBalance.plus(aliceWeiPay/2).toString(10), "Carol's balance is wrong.");
-            });
+                return contract.withdrawFunds({from: carolAddress});
+            })
+            .then(function(tx){
+                carolNewBalance = web3.eth.getBalance(carolAddress);
+
+                var gasUsed = tx.receipt.gasUsed;
+                var gasPrice = web3.eth.getTransaction(tx.tx).gasPrice;
+
+                assert.equal(carolNewBalance.toString(10), carolBalance.plus(aliceWeiPay/2).minus(gasPrice.mul(gasUsed)).toString(10), "Bob's balance is wrong.");
+            
+            })
     })
 
 })
