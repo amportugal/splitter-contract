@@ -34,6 +34,8 @@ contract Splitter is Killable{
         LogWithdrawal(msg.sender, balances[msg.sender]);
 
         msg.sender.transfer(balances[msg.sender]);
+
+        balances[msg.sender] = 0;
     }
 
     function areRecipientsValid(address giver, address recipient1, address recipient2) private returns (bool){
