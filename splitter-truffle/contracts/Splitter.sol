@@ -1,11 +1,8 @@
 pragma solidity ^0.4.18;
 
-contract Splitter {
-    address     public owner;
+import "./Killable.sol";
 
-    // Address of people
-    address     public bobAddress;
-    address     public carolAddress;
+contract Splitter is Killable{
 
     mapping (address => uint) balances;
 
@@ -13,34 +10,33 @@ contract Splitter {
     event LogSplitter(address recipient1, address recipient2, uint amountRecipient1, uint amountRecipient2);
     event LogWithdrawal(address recipient, uint amount);
 
-    function Splitter(address aliceAddr, address bobAddr, address carolAddr) public {
-        owner = aliceAddr;
+    function Splitter(address _owner) Killable(_owner) public{}
 
-        bobAddress = bobAddr;
-        carolAddress = carolAddr;
-    }
-
-    function() public payable{
+    function split(address recipient1, address recipient2) public payable{
         require(msg.value > 0);
-        require(owner == msg.sender);
+        require(areRecipientsValid(msg.sender, recipient1, recipient2));
 
         uint halfOfValue = (msg.value / 2);
-        balances[bobAddress] += halfOfValue;
-        balances[carolAddress] += halfOfValue;
+        balances[recipient1] += halfOfValue;
+        balances[recipient2] += halfOfValue;
 
         /* The rest accumulates to owner */
         if(msg.value % 2 != 0) {
             balances[owner] += 1;
         }
 
-        LogSplitter(bobAddress, carolAddress, halfOfValue, halfOfValue);
+        LogSplitter(recipient1, recipient2, halfOfValue, halfOfValue);
     }
 
     function withdrawFunds() public{
         require(balances[msg.sender] > 0);
 
-        msg.sender.transfer(balances[msg.sender]);
-
         LogWithdrawal(msg.sender, balances[msg.sender]);
+
+        msg.sender.transfer(balances[msg.sender]);
+    }
+
+    function areRecipientsValid(address giver, address recipient1, address recipient2) private returns (bool){
+        return giver != recipient1 && giver != recipient2 && recipient1 != recipient2;
     }
 }

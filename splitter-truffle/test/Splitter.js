@@ -3,45 +3,44 @@ var Splitter = artifacts.require("./Splitter.sol");
 contract("Splitter contract", function(accounts) {
 
     var owner = accounts[0];
-    var bobAddress = accounts[1];
-    var carolAddress = accounts[2];
-
-    var aliceWeiPay = 5000;
+    var giver = accounts[1];
+    var recipient1 = accounts[2];
+    var recipient2 = accounts[3];
 
     var contract;
 
     beforeEach(function() {
-        return Splitter.new(owner, bobAddress, carolAddress, {from: owner})
+        return Splitter.new(owner, {from: owner})
                 .then( instance => contract = instance);
     })
 
-    it("should split payment of alice to bob and carol", function() {
-        var bobBalance = web3.eth.getBalance(bobAddress);
-        var carolBalance = web3.eth.getBalance(carolAddress);
-        var bobNewBalance;
-        var carolNewBalance;
+    it("should split payment to recipient1 and recipient2", function() {
+        var recip1Balance = web3.eth.getBalance(recipient1);
+        var recip2Balance = web3.eth.getBalance(recipient2);
+        var recip1NewBalance;
+        var recip2NewBalance;
 
-        return contract.sendTransaction({from: owner, value: aliceWeiPay})
+        return contract.split(recipient1, recipient2,{from: giver, value: 5000})
             .then(function(tx) {
-                return contract.withdrawFunds({from: bobAddress});
+                return contract.withdrawFunds({from: recipient1});
             })
             .then(function(tx) {
-                bobNewBalance = web3.eth.getBalance(bobAddress);
+                recip1NewBalance = web3.eth.getBalance(recipient1);
 
                 var gasUsed = tx.receipt.gasUsed;
                 var gasPrice = web3.eth.getTransaction(tx.tx).gasPrice;
 
-                assert.equal(bobNewBalance.toString(10), bobBalance.plus(aliceWeiPay/2).minus(gasPrice.mul(gasUsed)).toString(10), "Bob's balance is wrong.");
+                assert.equal(recip1NewBalance.toString(10), recip1Balance.plus(5000/2).minus(gasPrice.mul(gasUsed)).toString(10), "Recipient 1 balance is wrong.");
                 
-                return contract.withdrawFunds({from: carolAddress});
+                return contract.withdrawFunds({from: recipient2});
             })
             .then(function(tx){
-                carolNewBalance = web3.eth.getBalance(carolAddress);
+                recip2NewBalance = web3.eth.getBalance(recipient2);
 
                 var gasUsed = tx.receipt.gasUsed;
                 var gasPrice = web3.eth.getTransaction(tx.tx).gasPrice;
 
-                assert.equal(carolNewBalance.toString(10), carolBalance.plus(aliceWeiPay/2).minus(gasPrice.mul(gasUsed)).toString(10), "Bob's balance is wrong.");
+                assert.equal(recip2NewBalance.toString(10), recip2Balance.plus(5000/2).minus(gasPrice.mul(gasUsed)).toString(10), "Recipient 2 balance is wrong.");
             
             })
     })
