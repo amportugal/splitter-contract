@@ -4,13 +4,13 @@ import "./Killable.sol";
 
 contract Splitter is Killable{
 
-    mapping (address => uint) balances;
+    mapping (address => uint) public balances;
 
     // Event logger
-    event LogSplitter(address recipient1, address recipient2, uint amountRecipient1, uint amountRecipient2);
-    event LogWithdrawal(address recipient, uint amount);
+    event LogSplitter(address indexed recipient1, address indexed recipient2, uint amountRecipient1, uint amountRecipient2);
+    event LogWithdrawal(address indexed recipient, uint amount);
 
-    function Splitter(address _owner) Killable(_owner) public{}
+    function Splitter() Killable() public{}
 
     function split(address recipient1, address recipient2) public payable{
         require(msg.value > 0);
@@ -33,9 +33,10 @@ contract Splitter is Killable{
 
         LogWithdrawal(msg.sender, balances[msg.sender]);
 
-        msg.sender.transfer(balances[msg.sender]);
-
+        uint amountToTransfer = balances[msg.sender];
         balances[msg.sender] = 0;
+
+        msg.sender.transfer(amountToTransfer);
     }
 
     function areRecipientsValid(address giver, address recipient1, address recipient2) private returns (bool){
